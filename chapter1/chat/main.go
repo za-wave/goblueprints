@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"sync"
 )
@@ -29,9 +28,8 @@ func main() {
 	var addr = flag.String("addr", ":8080", "address of the application")
 	flag.Parse()
 	r := newRoom()
-	r.tracer = trace.New(os.Stdout)
 	// rooting
-	http.Handle("/", &templateHandler{filename: "chat.html"})
+	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
 	http.Handle("/room", r)
 	// start chat room
 	go r.run()
