@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/gorilla/websocket v1.4.2
-	github.com/joho/godotenv v1.3.0
+	github.com/joho/godotenv v1.4.0
 	github.com/stretchr/gomniauth v0.0.0-20170717123514-4b6c822be2eb
 	github.com/stretchr/objx v0.3.0
 	github.com/za-wave/goblueprints v0.0.0-20210923012029-6523135605a5
