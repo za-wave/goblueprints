@@ -4,17 +4,21 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/objx"
+
+	"github.com/gorilla/websocket"
 	"github.com/za-wave/goblueprints/chapter1/trace"
 )
 
 type room struct {
-	// forward is a chanel to hold messages to send to the other clients.
-	//　join is a channel for clients who join the room
-	// leave is a channel for clients who leave the room
-	// clients hols all clients who join the room
-	// traver gets logs from chat room
+
+	// forward is a channel that holds incoming messages
+	// that should be forwarded to the other clients.
+	// join is a channel for clients wishing to join the room.
+	// leave is a channel for clients wishing to leave the room.
+	// clients holds all current clients in this room.
+	// tracer will receive trace information of activity
+	// in the room.
 	forward chan *message
 	join    chan *client
 	leave   chan *client
@@ -22,7 +26,8 @@ type room struct {
 	tracer  trace.Tracer
 }
 
-//  newRoom make a new room
+// newRoom makes a new room that is ready to
+// go.
 func newRoom() *room {
 	return &room{
 		forward: make(chan *message),

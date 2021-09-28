@@ -6,11 +6,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// client is a chatting users
+// client represents a single chatting user.
 type client struct {
-	// socket is Websocket for the users
-	// send is chanel to send  messages
-	// room is a chat room the user is in
+	// socket is the web socket for this client.
+	// send is a channel on which messages are sent.
+	// room is the room this client is chatting in.
+	// userData holds information about the user
 	socket   *websocket.Conn
 	send     chan *message
 	room     *room
@@ -18,6 +19,7 @@ type client struct {
 }
 
 func (c *client) read() {
+	defer c.socket.Close()
 	for {
 		var msg *message
 		err := c.socket.ReadJSON(&msg)
@@ -28,15 +30,14 @@ func (c *client) read() {
 		msg.Name = c.userData["name"].(string)
 		c.room.forward <- msg
 	}
-	c.socket.Close()
 }
 
 func (c *client) write() {
+	defer c.socket.Close()
 	for msg := range c.send {
 		err := c.socket.WriteJSON(msg)
 		if err != nil {
 			return
 		}
 	}
-	c.socket.Close()
 }
