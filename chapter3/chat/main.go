@@ -62,7 +62,8 @@ func main() {
 	)
 
 	// r := newRoom(UseAuthAvatar)
-	r := newRoom(UseGravatar)
+	// r := newRoom(UseGravatar)
+	r := newRoom(UseFileSystemAvatar)
 	r.tracer = trace.New(os.Stdout)
 
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
@@ -81,6 +82,9 @@ func main() {
 	http.Handle("/room", r)
 	http.Handle("/upload", &templateHandler{filename: "upload.html"})
 	http.HandleFunc("/uploader", uploaderHandler)
+	http.Handle("/avatars/",
+		http.StripPrefix("/avatars/",
+			http.FileServer(http.Dir("./avatars"))))
 
 	// get the room going
 	go r.run()
