@@ -17,6 +17,12 @@ import (
 	"github.com/za-wave/goblueprints/chapter1/trace"
 )
 
+var avatars Avatar = TryAvatars{
+	UseFileSystemAvatar,
+	UseAuthAvatar,
+	UseGravatar,
+}
+
 // templ represents a single template
 type templateHandler struct {
 	once     sync.Once
@@ -26,9 +32,9 @@ type templateHandler struct {
 
 // ServeHTTP handles the HTTP request.
 func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	t.once.Do(func() {
+	if t.templ == nil {
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
-	})
+	}
 
 	data := map[string]interface{}{
 		"Host": r.Host,
@@ -45,29 +51,28 @@ func main() {
 	if err != nil {
 		fmt.Printf("読み込み出来ませんでした: %v", err)
 	}
-	AUTH_SECURITY_KEY := os.Getenv("AUTH_SECURITY_KEY")
-	GOOGLE_CLIENT_ID := os.Getenv("GOOGLE_CLIENT_ID")
-	GOOGLE_CLIENT_SECRET := os.Getenv("GOOGLE_CLIENT_SECRET")
+	AuthSecurityKey := os.Getenv("AUTH_SECURITY_KEY")
+	GoogleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	GoogleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
 	var host = flag.String("host", ":8080", "The host of the application.")
 
-	flag.Parse()
+	flag.Parse() // parse the flags
 
 	// setup for gomniauth
-	gomniauth.SetSecurityKey(AUTH_SECURITY_KEY)
+	gomniauth.SetSecurityKey(AuthSecurityKey)
 	gomniauth.WithProviders(
 		// facebook.New("", "", "http://localhost:8080/auth/callback/facebook"),
 		// github.New("", "", "http://localhost:8080/auth/callback/github"),
-		google.New(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, "http://localhost:8080/auth/callback/google"),
+		google.New(GoogleClientID, GoogleClientSecret, "http://localhost:8080/auth/callback/google"),
 	)
 
-	// r := newRoom(UseAuthAvatar)
-	// r := newRoom(UseGravatar)
-	r := newRoom(UseFileSystemAvatar)
+	r := newRoom()
 	r.tracer = trace.New(os.Stdout)
 
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
 	http.Handle("/login", &templateHandler{filename: "login.html"})
+	http.HandleFunc("/auth/", loginHandler)
 	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:   "auth",
@@ -75,10 +80,9 @@ func main() {
 			Path:   "",
 			MaxAge: -1,
 		})
-		w.Header()["Location"] = []string{"/chat"}
+		w.Header().Set("Location", "/chat")
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	})
-	http.HandleFunc("/auth/", loginHandler)
 	http.Handle("/room", r)
 	http.Handle("/upload", &templateHandler{filename: "upload.html"})
 	http.HandleFunc("/uploader", uploaderHandler)
