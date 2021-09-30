@@ -19,7 +19,7 @@ func TestAuthAvatar(t *testing.T) {
 		t.Error("AuthAvatar.GetAvatarURL should return ErrNoAvatarURL when no value present")
 	}
 	// set a value
-	testURL := "http://url-to-avatar/"
+	testURL := "http://url-to-gravatar/"
 	testUser = &gomniauthtest.TestUser{}
 	testChatUser.User = testUser
 	testUser.On("AvatarURL").Return(testURL, nil)
@@ -45,17 +45,23 @@ func TestGravatarAvatar(t *testing.T) {
 }
 
 func TestFileSystemAvatar(t *testing.T) {
-	filename := filepath.Join("avatars", "abc.jpg")
-	ioutil.WriteFile(filename, []byte{}, 0777)
-	defer func() { os.Remove(filename) }()
+
+	// make a test avatar file
+	filename := path.Join("avatars", "abc.jpg")
+	if err := os.MkdirAll("avatars", 0777); err != nil {
+		t.Errorf("couldn't make avatar dir: %s", err)
+	}
+	if err := ioutil.WriteFile(filename, []byte{}, 0777); err != nil {
+		t.Errorf("couldn't make avatar: %s", err)
+	}
+	defer os.Remove(filename)
 
 	var fileSystemAvatar FileSystemAvatar
 	user := &chatUser{uniqueID: "abc"}
-	url, err := gravatarAvatar.GetAvatarURL(user)
-	client.userData = map[string]interface{}{"userid": "abc"}
-	url, err := fileSystemAvatar.GetAvatarURL(client)
+
+	url, err := fileSystemAvatar.GetAvatarURL(user)
 	if err != nil {
-		t.Error("FileSystemAvatar.GetAvatarURL should not retrun an error")
+		t.Errorf("FileSystemAvatar.GetAvatarURL should not return an error: %s", err)
 	}
 	if url != "/avatars/abc.jpg" {
 		t.Errorf("FileSystemAvatar.GetAvatarURL wrongly returned %s", url)

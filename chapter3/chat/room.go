@@ -4,9 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/stretchr/objx"
-
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/objx"
 	"github.com/za-wave/goblueprints/chapter1/trace"
 )
 
@@ -26,8 +25,7 @@ type room struct {
 	tracer  trace.Tracer
 }
 
-// newRoom makes a new room that is ready to
-// go.
+// newRoom makes a new room that is ready to go.
 func newRoom() *room {
 	return &room{
 		forward: make(chan *message),

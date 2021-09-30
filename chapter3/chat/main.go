@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
 	"text/template"
 
 	"github.com/joho/godotenv"
@@ -17,6 +16,7 @@ import (
 	"github.com/za-wave/goblueprints/chapter1/trace"
 )
 
+// set the active Avatar implementation
 var avatars Avatar = TryAvatars{
 	UseFileSystemAvatar,
 	UseAuthAvatar,
@@ -25,7 +25,6 @@ var avatars Avatar = TryAvatars{
 
 // templ represents a single template
 type templateHandler struct {
-	once     sync.Once
 	filename string
 	templ    *template.Template
 }
@@ -46,6 +45,8 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.templ.Execute(w, data)
 }
 
+var host = flag.String("host", ":8080", "The host of the application.")
+
 func main() {
 	err := godotenv.Load(fmt.Sprintf("../../%s.env", os.Getenv("GO_ENV")))
 	if err != nil {
@@ -55,11 +56,9 @@ func main() {
 	GoogleClientID := os.Getenv("GOOGLE_CLIENT_ID")
 	GoogleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
-	var host = flag.String("host", ":8080", "The host of the application.")
-
 	flag.Parse() // parse the flags
 
-	// setup for gomniauth
+	// setup gomniauth
 	gomniauth.SetSecurityKey(AuthSecurityKey)
 	gomniauth.WithProviders(
 		// facebook.New("", "", "http://localhost:8080/auth/callback/facebook"),
@@ -73,17 +72,17 @@ func main() {
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
 	http.Handle("/login", &templateHandler{filename: "login.html"})
 	http.HandleFunc("/auth/", loginHandler)
+	http.Handle("/room", r)
 	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:   "auth",
 			Value:  "",
-			Path:   "",
+			Path:   "/",
 			MaxAge: -1,
 		})
 		w.Header().Set("Location", "/chat")
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	})
-	http.Handle("/room", r)
 	http.Handle("/upload", &templateHandler{filename: "upload.html"})
 	http.HandleFunc("/uploader", uploaderHandler)
 	http.Handle("/avatars/",

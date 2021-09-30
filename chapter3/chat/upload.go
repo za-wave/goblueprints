@@ -7,6 +7,7 @@ import (
 	"path"
 )
 
+// uploaderHandler expects two fields to be posted, userid and avatarFile.
 func uploaderHandler(w http.ResponseWriter, req *http.Request) {
 	userID := req.FormValue("userid")
 	file, header, err := req.FormFile("avatarFile")
@@ -27,24 +28,3 @@ func uploaderHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	io.WriteString(w, "Successful")
 }
-
-// func uploaderHandler(w http.ResponseWriter, req *http.Request) {
-// 	userID := req.FormValue("userid")
-// 	file, header, err := req.FormFile("avatarFile")
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	data, err := ioutil.ReadAll(file)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	filename := filepath.Join("avatars", userID+filepath.Ext(header.Filename))
-// 	err = ioutil.WriteFile(filename, data, 0777)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	io.WriteString(w, "Successful")
-// }
