@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 const PathSeparator = "/"
 
@@ -19,7 +21,6 @@ func NewPath(p string) *Path {
 	}
 	return &Path{Path: p, ID: id}
 }
-
 func (p *Path) HasID() bool {
 	return len(p.ID) > 0
 }
